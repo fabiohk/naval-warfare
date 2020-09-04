@@ -8,6 +8,8 @@ from naval_warfare.models import Board2D
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
 from naval_warfare.models import Ship
+from naval_warfare.ship import increase_ship_hits_taken
+from naval_warfare.ship import is_ship_destroyed
 
 logger = logging.getLogger(__name__)
 
@@ -61,3 +63,9 @@ def bomb_board_position(board: Board2D, position: Position) -> bool:
     has_hit_something = is_position_occuppied(board, position)
     board.chart[position.x][position.y].status = PositionStatus.BOMBED.value
     return has_hit_something
+
+
+def has_destroyed_ship_on_position(board: Board2D, position: Position) -> bool:
+    affected_ship = board.ship_at(position)
+    increase_ship_hits_taken(affected_ship)
+    return is_ship_destroyed(affected_ship)

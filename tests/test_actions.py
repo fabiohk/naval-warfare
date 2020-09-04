@@ -37,21 +37,37 @@ def test_should_place_ship_vertically():
 def test_should_bomb_a_free_position():
     board, position = Board2D(4, 4), Position(0, 0)
 
-    has_hit_something = bomb_position(board, position)
+    outcome = bomb_position(board, position)
 
     assert board.chart[0][0].status == PositionStatus.BOMBED.value
-    assert not has_hit_something
+    assert not outcome.has_hit_something
+    assert not outcome.has_destroyed_a_ship
 
 
-def test_should_bomb_an_occuppied_position():
+def test_should_bomb_an_occuppied_position_without_destroying_a_ship():
     board, position, ship = Board2D(4, 4), Position(0, 0), Ship("destroyer", 3)
 
     board.chart[position.x][position.y] = BoardPosition(PositionStatus.OCCUPIED.value, ship)
 
-    has_hit_something = bomb_position(board, position)
+    outcome = bomb_position(board, position)
 
+    assert ship.hits_taken == 1
     assert board.chart[0][0].status == PositionStatus.BOMBED.value
-    assert has_hit_something
+    assert outcome.has_hit_something
+    assert not outcome.has_destroyed_a_ship
+
+
+def test_should_bomb_and_destroy_an_occupied_position():
+    board, position, ship = Board2D(4, 4), Position(0, 0), Ship("destroyer", 1)
+
+    board.chart[position.x][position.y] = BoardPosition(PositionStatus.OCCUPIED.value, ship)
+
+    outcome = bomb_position(board, position)
+
+    assert ship.hits_taken == 1
+    assert board.chart[0][0].status == PositionStatus.BOMBED.value
+    assert outcome.has_hit_something
+    assert outcome.has_destroyed_a_ship
 
 
 def test_shouldnt_bomb_an_already_bombed_position():

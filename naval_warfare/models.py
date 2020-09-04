@@ -17,7 +17,7 @@ class PositionStatus(Enum):
 class Ship:
     kind: str
     length: int
-    hits: int = field(default=0, init=False)
+    hits_taken: int = field(default=0, init=False)
 
 
 @dataclass
@@ -42,3 +42,6 @@ class Board2D:
 
     def status_at(self, position: Position) -> str:
         return self.chart[position.x][position.y].status
+
+    def ship_at(self, position: Position) -> Ship:
+        return self.chart[position.x][position.y].ship
