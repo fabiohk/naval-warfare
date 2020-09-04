@@ -4,6 +4,7 @@ from naval_warfare.actions import bomb_position
 from naval_warfare.actions import place_ship_on_board
 from naval_warfare.exceptions import CannotBombPosition
 from naval_warfare.models import Board2D
+from naval_warfare.models import BoardPosition
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
 from naval_warfare.models import Ship
@@ -14,9 +15,11 @@ def test_should_place_ship_horizontally():
 
     place_ship_on_board(ship, board, front_position, "horizontal")
 
-    assert board.chart[0][0] == PositionStatus.OCCUPIED.value
-    assert board.chart[0][1] == PositionStatus.OCCUPIED.value
-    assert board.chart[0][2] == PositionStatus.OCCUPIED.value
+    expected_board_position = BoardPosition(PositionStatus.OCCUPIED.value, ship)
+
+    assert board.chart[0][0] == expected_board_position
+    assert board.chart[0][1] == expected_board_position
+    assert board.chart[0][2] == expected_board_position
 
 
 def test_should_place_ship_vertically():
@@ -24,9 +27,11 @@ def test_should_place_ship_vertically():
 
     place_ship_on_board(ship, board, front_position, "vertical")
 
-    assert board.chart[0][0] == PositionStatus.OCCUPIED.value
-    assert board.chart[1][0] == PositionStatus.OCCUPIED.value
-    assert board.chart[2][0] == PositionStatus.OCCUPIED.value
+    expected_board_position = BoardPosition(PositionStatus.OCCUPIED.value, ship)
+
+    assert board.chart[0][0] == expected_board_position
+    assert board.chart[1][0] == expected_board_position
+    assert board.chart[2][0] == expected_board_position
 
 
 def test_should_bomb_a_free_position():
@@ -34,25 +39,25 @@ def test_should_bomb_a_free_position():
 
     has_hit_something = bomb_position(board, position)
 
-    assert board.chart[0][0] == PositionStatus.BOMBED.value
+    assert board.chart[0][0].status == PositionStatus.BOMBED.value
     assert not has_hit_something
 
 
 def test_should_bomb_an_occuppied_position():
-    board, position = Board2D(4, 4), Position(0, 0)
+    board, position, ship = Board2D(4, 4), Position(0, 0), Ship("destroyer", 3)
 
-    board.chart[position.x][position.y] = PositionStatus.OCCUPIED.value
+    board.chart[position.x][position.y] = BoardPosition(PositionStatus.OCCUPIED.value, ship)
 
     has_hit_something = bomb_position(board, position)
 
-    assert board.chart[0][0] == PositionStatus.BOMBED.value
+    assert board.chart[0][0].status == PositionStatus.BOMBED.value
     assert has_hit_something
 
 
 def test_shouldnt_bomb_an_already_bombed_position():
     board, position = Board2D(4, 4), Position(0, 0)
 
-    board.chart[position.x][position.y] = PositionStatus.BOMBED.value
+    board.chart[position.x][position.y] = BoardPosition(PositionStatus.BOMBED.value)
 
     with pytest.raises(CannotBombPosition):
         bomb_position(board, position)

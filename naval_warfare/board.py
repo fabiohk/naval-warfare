@@ -5,9 +5,9 @@ from typing import Sequence
 from naval_warfare.exceptions import CannotOccupyPositions
 from naval_warfare.exceptions import UnknownDirection
 from naval_warfare.models import Board2D
-from naval_warfare.models import Chart2D
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
+from naval_warfare.models import Ship
 
 logger = logging.getLogger(__name__)
 
@@ -16,22 +16,21 @@ def is_position_inside_the_board(board: Board2D, position: Position) -> bool:
     return 0 <= position.x < board.length and 0 <= position.y < board.width
 
 
-def is_position_bombed(chart: Chart2D, position: Position) -> bool:
-    return chart[position.x][position.y] == PositionStatus.BOMBED.value
+def is_position_bombed(board: Board2D, position: Position) -> bool:
+    return board.status_at(position) == PositionStatus.BOMBED.value
 
 
 def can_bomb_board_position(board: Board2D, position: Position) -> bool:
-    return is_position_inside_the_board(board, position) and not is_position_bombed(board.chart, position)
+    return is_position_inside_the_board(board, position) and not is_position_bombed(board, position)
 
 
-def is_position_occuppied(chart: Chart2D, position: Position) -> bool:
-    return chart[position.x][position.y] == PositionStatus.OCCUPIED.value
+def is_position_occuppied(board: Board2D, position: Position) -> bool:
+    return board.status_at(position) == PositionStatus.OCCUPIED.value
 
 
 def cannot_occupy_board_in_the_positions(board: Board2D, positions: Sequence[Position]) -> bool:
     return any(
-        not is_position_inside_the_board(board, position)
-        or board.chart[position.x][position.y] != PositionStatus.FREE.value
+        not is_position_inside_the_board(board, position) or board.status_at(position) != PositionStatus.FREE.value
         for position in positions
     )
 
@@ -46,11 +45,19 @@ def retrieve_affected_positions(ship_length: int, front_position: Position, dire
     raise UnknownDirection
 
 
-def occupy_board_positions(board: Board2D, positions: Sequence[Position]):
+def occupy_board_positions_with_ship(board: Board2D, positions: Sequence[Position], ship: Ship):
     logger.info("Possible positions that will be occupied: %s", positions)
     if cannot_occupy_board_in_the_positions(board, positions):
         raise CannotOccupyPositions
 
     for position in positions:
-        board.chart[position.x][position.y] = PositionStatus.OCCUPIED.value
+        board.chart[position.x][position.y].status = PositionStatus.OCCUPIED.value
+        board.chart[position.x][position.y].ship = ship
+
     logger.info("Board positions occupied!")
+
+
+def bomb_board_position(board: Board2D, position: Position) -> bool:
+    has_hit_something = is_position_occuppied(board, position)
+    board.chart[position.x][position.y].status = PositionStatus.BOMBED.value
+    return has_hit_something

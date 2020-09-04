@@ -4,6 +4,7 @@ from dataclasses import field
 from enum import Enum
 from typing import List
 from typing import NewType
+from typing import Optional
 
 
 class PositionStatus(Enum):
@@ -12,7 +13,22 @@ class PositionStatus(Enum):
     BOMBED = "B"
 
 
-Chart2D = NewType("Chart2D", List[List[PositionStatus]])
+@dataclass
+class Ship:
+    kind: str
+    length: int
+    hits: int = field(default=0, init=False)
+
+
+@dataclass
+class BoardPosition:
+    status: PositionStatus = PositionStatus.FREE.value
+    ship: Optional[Ship] = None
+
+
+Chart2D = NewType("Chart2D", List[List[BoardPosition]])
+
+Position = namedtuple("Position", ["x", "y"])
 
 
 @dataclass
@@ -22,13 +38,7 @@ class Board2D:
     chart: Chart2D = field(init=False)
 
     def __post_init__(self):
-        self.chart = [[PositionStatus.FREE.value for _ in range(self.width)] for _ in range(self.length)]
+        self.chart = [[BoardPosition() for _ in range(self.width)] for _ in range(self.length)]
 
-
-@dataclass
-class Ship:
-    kind: str
-    length: int
-
-
-Position = namedtuple("Position", ["x", "y"])
+    def status_at(self, position: Position) -> str:
+        return self.chart[position.x][position.y].status
