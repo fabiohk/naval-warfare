@@ -56,6 +56,7 @@ def occupy_board_positions_with_ship(board: Board2D, positions: Sequence[Positio
         board.chart[position.x][position.y].status = PositionStatus.OCCUPIED.value
         board.chart[position.x][position.y].ship = ship
 
+    board.ships.append(ship)
     logger.info("Board positions occupied!")
 
 
@@ -69,3 +70,7 @@ def has_destroyed_ship_on_position(board: Board2D, position: Position) -> bool:
     affected_ship = board.ship_at(position)
     increase_ship_hits_taken(affected_ship)
     return is_ship_destroyed(affected_ship)
+
+
+def has_all_ships_destroyed(board: Board2D) -> bool:
+    return all(is_ship_destroyed(ship) for ship in board.ships)

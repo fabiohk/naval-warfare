@@ -3,6 +3,7 @@ import itertools
 import pytest
 
 from naval_warfare.board import cannot_occupy_board_in_the_positions
+from naval_warfare.board import has_all_ships_destroyed
 from naval_warfare.board import occupy_board_positions_with_ship
 from naval_warfare.board import retrieve_affected_positions
 from naval_warfare.exceptions import CannotOccupyPositions
@@ -82,6 +83,8 @@ def test_should_occupy_free_positions_from_board_with_ship():
     assert board.chart[1][1].status == PositionStatus.OCCUPIED.value
     assert board.chart[1][1].ship == ship
 
+    assert len(board.ships) == 1
+
 
 def test_should_raise_exception_that_cannot_occupy_board_position():
     board = Board2D(4, 4)  # A new board completely free
@@ -90,3 +93,21 @@ def test_should_raise_exception_that_cannot_occupy_board_position():
 
     with pytest.raises(CannotOccupyPositions):
         occupy_board_positions_with_ship(board, [Position(1, 1)], Ship("destroyer", 3))
+
+
+def test_should_return_true_when_all_ships_from_a_board_was_destroyed():
+    board, ship = Board2D(4, 4), Ship("destroyer", 3)
+
+    ship.hits_taken = 3  # Ship destroyed
+    board.ships.append(ship)  # Append ship to the board
+
+    assert has_all_ships_destroyed(board)
+
+
+def test_should_return_false_when_theres_a_not_destroyed_ship_on_board():
+    board, ship = Board2D(4, 4), Ship("destroyer", 3)
+
+    ship.hits_taken = 2  # Ship almost destroyed
+    board.ships.append(ship)  # Append ship to the board
+
+    assert not has_all_ships_destroyed(board)
