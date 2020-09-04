@@ -5,6 +5,7 @@ from typing import Sequence
 from naval_warfare.exceptions import CannotOccupyPositions
 from naval_warfare.exceptions import UnknownDirection
 from naval_warfare.models import Board2D
+from naval_warfare.models import Chart2D
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
 
@@ -13,6 +14,18 @@ logger = logging.getLogger(__name__)
 
 def is_position_inside_the_board(board: Board2D, position: Position) -> bool:
     return 0 <= position.x < board.length and 0 <= position.y < board.width
+
+
+def is_position_bombed(chart: Chart2D, position: Position) -> bool:
+    return chart[position.x][position.y] == PositionStatus.BOMBED.value
+
+
+def can_bomb_board_position(board: Board2D, position: Position) -> bool:
+    return is_position_inside_the_board(board, position) and not is_position_bombed(board.chart, position)
+
+
+def is_position_occuppied(chart: Chart2D, position: Position) -> bool:
+    return chart[position.x][position.y] == PositionStatus.OCCUPIED.value
 
 
 def cannot_occupy_board_in_the_positions(board: Board2D, positions: Sequence[Position]) -> bool:

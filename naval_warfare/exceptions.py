@@ -4,3 +4,7 @@ class UnknownDirection(Exception):
 
 class CannotOccupyPositions(Exception):
     pass
+
+
+class CannotBombPosition(Exception):
+    pass
