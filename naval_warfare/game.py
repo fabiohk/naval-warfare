@@ -1,3 +1,4 @@
+import logging
 from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
@@ -21,6 +22,9 @@ from naval_warfare.models import Board2D
 from naval_warfare.models import Position
 from naval_warfare.models import Ship
 from naval_warfare.models import ShipDirection
+from naval_warfare.ship import is_ship_destroyed
+
+logger = logging.getLogger(__name__)
 
 AvailableShip = TypedDict("AvailableShip", {"kind": str, "length": int, "quantity": int})
 GameOption = Dict[str, AvailableShip]
@@ -31,6 +35,10 @@ class Player:
         self.name = name
         self.board = Board2D(length, width)
         self.game_option = deepcopy(game_option)
+
+    @property
+    def remaining_ships(self) -> List[str]:
+        return [ship.kind for ship in self.board.ships if not is_ship_destroyed(ship)]
 
 
 @dataclass
@@ -61,9 +69,8 @@ def retrieve_available_ships(game_option: GameOption) -> List[str]:
 
 
 def parse_line_input(line: str, game_option: GameOption) -> Tuple[AvailableShip, Position, ShipDirection]:
-    ship_slug, x, y, direction_slug = line.split(maxsplit=3)
-
     try:
+        ship_slug, x, y, direction_slug = line.split(maxsplit=3)
         return (
             game_option[ship_slug],
             Position(int(x), int(y)),
@@ -116,8 +123,15 @@ def prepare_player_game(player: Player):
 
         with suppress(InputWithError, CannotOccupyPositions, UnavailableShip):
             line = input()
-            chosen_ship, position, direction = parse_line_input(line)
+            chosen_ship, position, direction = parse_line_input(line, player.game_option)
             place_ship(player, chosen_ship, position, direction)
+            logger.debug(
+                """Updated %s board:
+                %s
+                """,
+                player.name,
+                player.board,
+            )
             available_ships = retrieve_available_ships(player.game_option)
 
 
@@ -136,17 +150,17 @@ def prepare_game(game_option: Optional[GameOption] = None) -> Game:
 
 
 def get_random_position(length: int, width: int) -> Position:
-    return Position(randint(0, length, randint(0, width)))
+    return Position(randint(0, length), randint(0, width))
 
 
-def print_outcome(outcome: BombOutcome, position: Position):
+def print_outcome(player: Player, outcome: BombOutcome, position: Position):
     hit_something, destroyed_ship = (
         convert_boolean_to_yes_no(outcome.has_hit_something),
         convert_boolean_to_yes_no(outcome.has_destroyed_a_ship),
     )
     print(
         f"""
-        Attacked position ({position.x}, {position.y})...
+        {player.name} attacked position ({position.x}, {position.y})...
         Outcome:
             - hit something: {hit_something}
             - destroyed ship: {destroyed_ship}
@@ -162,7 +176,14 @@ def start(game: Game):
         with suppress(CannotBombPosition):
             position = get_random_position(attacked_player.board.length, attacked_player.board.width)
             bomb_outcome = bomb_position(attacked_player.board, position)
-            print_outcome(bomb_outcome, position)
+            print_outcome(attacking_player, bomb_outcome, position)
             attacking_player, attacked_player = attacked_player, attacking_player
 
     print(f"Battle result: {attacked_player.name} won!")
+    print(f"Remaining ships: {attacked_player.remaining_ships}", end="\n\n")
+
+
+def show_final_boards(game: Game):
+    for player in game.players:
+        print(f"Final board from {player.name}")
+        print(str(player.board), end="\n\n")

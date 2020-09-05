@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4105fb95a5e4bfd54a67d6240d6c50df0e6721ee0adc1025fd0e4412653acdd7"
+            "sha256": "e4f28723b0370e537a452d10b36642d1204aad3c8a2bf6f99917818985d647e8"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -84,6 +84,20 @@
                 "sha256:e26c993bd4b220429d4ec8c1468eca445a4064a61c74ca08da7429af9bc53bb0"
             ],
             "version": "==5.2.1"
+        },
+        "distlib": {
+            "hashes": [
+                "sha256:8c09de2c67b3e7deef7184574fc060ab8a793e7adbb183d942c389c8b13c52fb",
+                "sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1"
+            ],
+            "version": "==0.3.1"
+        },
+        "filelock": {
+            "hashes": [
+                "sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59",
+                "sha256:929b7d63ec5b7d6b71b0fa5ac14e030b3f70b75747cef1b10da9b879fef15836"
+            ],
+            "version": "==3.0.12"
         },
         "iniconfig": {
             "hashes": [
@@ -217,6 +231,14 @@
             ],
             "version": "==0.10.1"
         },
+        "tox": {
+            "hashes": [
+                "sha256:e6318f404aff16522ff5211c88cab82b39af121735a443674e4e2e65f4e4637b",
+                "sha256:eb629ddc60e8542fd4a1956b2462e3b8771d49f1ff630cecceacaa0fbfb7605a"
+            ],
+            "index": "pypi",
+            "version": "==3.20.0"
+        },
         "typed-ast": {
             "hashes": [
                 "sha256:0666aa36131496aed8f7be0410ff974562ab7eeac11ef351def9ea6fa28f6355",
@@ -250,6 +272,13 @@
                 "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"
             ],
             "version": "==3.7.4.3"
+        },
+        "virtualenv": {
+            "hashes": [
+                "sha256:43add625c53c596d38f971a465553f6318decc39d98512bc100fa1b1e839c8dc",
+                "sha256:e0305af10299a7fb0d69393d8f04cb2965dda9351140d11ac8db4e5e3970451b"
+            ],
+            "version": "==20.0.31"
         }
     }
 }

@@ -1,0 +1,11 @@
+AIR 0 1 H
+BTL 4 5 V
+SUB 2 3 V
+DES 9 4 H
+PTL 4 8 V
+----------
+AIR 1 9 V
+BTL 0 4 H
+SUB 1 4 V
+DES 8 1 H
+PTL 5 5 V

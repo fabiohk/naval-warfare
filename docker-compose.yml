@@ -1,10 +1,18 @@
 version: "3.8"
 
 services:
-  run-tests:
+  tests:
     image: python:3.8-slim
     working_dir: /app
     volumes:
       - .:/app
     command: >
       sh -c "pip install tox && tox"
+
+  play-game:
+    build:
+      context: .
+    # environment: # Uncomment if you want to see logs from DEBUG level
+      # LOG_LEVEL: "DEBUG" # Uncomment if you want to see logs from DEBUG level
+    command: >
+      python main.py

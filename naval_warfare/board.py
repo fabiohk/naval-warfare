@@ -33,7 +33,7 @@ def is_position_occuppied(board: Board2D, position: Position) -> bool:
 
 def cannot_occupy_board_in_the_positions(board: Board2D, positions: Sequence[Position]) -> bool:
     return any(
-        not is_position_inside_the_board(board, position) or board.status_at(position) != PositionStatus.FREE.value
+        not is_position_inside_the_board(board, position) or board.status_at(position) != PositionStatus.FREE
         for position in positions
     )
 

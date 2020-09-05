@@ -27,7 +27,7 @@ class Ship:
 
 @dataclass
 class BoardPosition:
-    status: PositionStatus = PositionStatus.FREE.value
+    status: PositionStatus = PositionStatus.FREE
     ship: Optional[Ship] = None
 
 
@@ -45,6 +45,9 @@ class Board2D:
 
     def __post_init__(self):
         self.chart = [[BoardPosition() for _ in range(self.width)] for _ in range(self.length)]
+
+    def __str__(self) -> str:
+        return "\n".join([" ".join(position.status.value for position in self.chart[i]) for i in range(self.length)])
 
     def status_at(self, position: Position) -> str:
         return self.chart[position.x][position.y].status
