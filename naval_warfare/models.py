@@ -13,6 +13,11 @@ class PositionStatus(Enum):
     BOMBED = "B"
 
 
+class ShipDirection(Enum):
+    H = "horizontally"
+    V = "vertically"
+
+
 @dataclass
 class Ship:
     kind: str
@@ -36,7 +41,7 @@ class Board2D:
     length: int  # horizontal - x
     width: int  # vertical - y
     chart: Chart2D = field(init=False)
-    ships: List[Ship] = field(default=[], init=False)
+    ships: List[Ship] = field(default_factory=list, init=False)
 
     def __post_init__(self):
         self.chart = [[BoardPosition() for _ in range(self.width)] for _ in range(self.length)]

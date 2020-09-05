@@ -8,3 +8,11 @@ class CannotOccupyPositions(Exception):
 
 class CannotBombPosition(Exception):
     pass
+
+
+class InputWithError(Exception):
+    pass
+
+
+class UnavailableShip(Exception):
+    pass

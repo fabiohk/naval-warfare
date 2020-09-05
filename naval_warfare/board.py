@@ -8,6 +8,7 @@ from naval_warfare.models import Board2D
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
 from naval_warfare.models import Ship
+from naval_warfare.models import ShipDirection
 from naval_warfare.ship import increase_ship_hits_taken
 from naval_warfare.ship import is_ship_destroyed
 
@@ -19,7 +20,7 @@ def is_position_inside_the_board(board: Board2D, position: Position) -> bool:
 
 
 def is_position_bombed(board: Board2D, position: Position) -> bool:
-    return board.status_at(position) == PositionStatus.BOMBED.value
+    return board.status_at(position) == PositionStatus.BOMBED
 
 
 def can_bomb_board_position(board: Board2D, position: Position) -> bool:
@@ -27,7 +28,7 @@ def can_bomb_board_position(board: Board2D, position: Position) -> bool:
 
 
 def is_position_occuppied(board: Board2D, position: Position) -> bool:
-    return board.status_at(position) == PositionStatus.OCCUPIED.value
+    return board.status_at(position) == PositionStatus.OCCUPIED
 
 
 def cannot_occupy_board_in_the_positions(board: Board2D, positions: Sequence[Position]) -> bool:
@@ -37,11 +38,11 @@ def cannot_occupy_board_in_the_positions(board: Board2D, positions: Sequence[Pos
     )
 
 
-def retrieve_affected_positions(ship_length: int, front_position: Position, direction: str) -> List[Position]:
-    if direction == "horizontal":
+def retrieve_affected_positions(ship_length: int, front_position: Position, direction: ShipDirection) -> List[Position]:
+    if direction == ShipDirection.H:
         return [Position(front_position.x, j) for j in range(front_position.y, front_position.y + ship_length)]
 
-    if direction == "vertical":
+    if direction == ShipDirection.V:
         return [Position(i, front_position.y) for i in range(front_position.x, front_position.x + ship_length)]
 
     raise UnknownDirection
@@ -53,7 +54,7 @@ def occupy_board_positions_with_ship(board: Board2D, positions: Sequence[Positio
         raise CannotOccupyPositions
 
     for position in positions:
-        board.chart[position.x][position.y].status = PositionStatus.OCCUPIED.value
+        board.chart[position.x][position.y].status = PositionStatus.OCCUPIED
         board.chart[position.x][position.y].ship = ship
 
     board.ships.append(ship)
@@ -62,7 +63,7 @@ def occupy_board_positions_with_ship(board: Board2D, positions: Sequence[Positio
 
 def bomb_board_position(board: Board2D, position: Position) -> bool:
     has_hit_something = is_position_occuppied(board, position)
-    board.chart[position.x][position.y].status = PositionStatus.BOMBED.value
+    board.chart[position.x][position.y].status = PositionStatus.BOMBED
     return has_hit_something
 
 

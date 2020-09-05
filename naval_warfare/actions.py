@@ -10,18 +10,19 @@ from naval_warfare.exceptions import CannotBombPosition
 from naval_warfare.models import Board2D
 from naval_warfare.models import Position
 from naval_warfare.models import Ship
+from naval_warfare.models import ShipDirection
 
 logger = logging.getLogger(__name__)
 
 BombOutcome = namedtuple("BombOutcome", ["has_hit_something", "has_destroyed_a_ship"])
 
 
-def place_ship_on_board(ship: Ship, board: Board2D, front_position: Position, direction: str):
+def place_ship_on_board(ship: Ship, board: Board2D, front_position: Position, direction: ShipDirection):
     logger.info(
         "Ship %s (length: %s) will be placed in %s direction starting at %s",
         ship.kind,
         ship.length,
-        direction,
+        direction.value,
         front_position,
     )
 
