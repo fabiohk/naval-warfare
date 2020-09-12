@@ -36,6 +36,9 @@ class Player:
         self.board = Board2D(length, width)
         self.game_option = deepcopy(game_option)
 
+    def __str__(self) -> str:
+        return self.name
+
     @property
     def remaining_ships(self) -> List[str]:
         return [ship.kind for ship in self.board.ships if not is_ship_destroyed(ship)]
@@ -71,11 +74,7 @@ def retrieve_available_ships(game_option: GameOption) -> List[str]:
 def parse_line_input(line: str, game_option: GameOption) -> Tuple[AvailableShip, Position, ShipDirection]:
     try:
         ship_slug, x, y, direction_slug = line.split(maxsplit=3)
-        return (
-            game_option[ship_slug],
-            Position(int(x), int(y)),
-            ShipDirection[direction_slug],
-        )
+        return (game_option[ship_slug], Position(int(x), int(y)), ShipDirection[direction_slug])
     except (ValueError, KeyError):
         print(
             """
@@ -136,8 +135,9 @@ def prepare_player_game(player: Player):
 
 
 def prepare_game(game_option: Optional[GameOption] = None) -> Game:
-    player_1, player_2 = Player("Player 1", game_option=game_option or DEFAULT_GAME_OPTION), Player(
-        "Player 2", game_option=game_option or DEFAULT_GAME_OPTION
+    player_1, player_2 = (
+        Player("Player 1", game_option=game_option or DEFAULT_GAME_OPTION),
+        Player("Player 2", game_option=game_option or DEFAULT_GAME_OPTION),
     )
 
     print("Player 1, please place your Ships on the board!")
@@ -168,19 +168,23 @@ def print_outcome(player: Player, outcome: BombOutcome, position: Position):
     )
 
 
-def start(game: Game):
+def start(game: Game) -> List[Dict[str, BombOutcome]]:
     print("Time to battle!")
+    turns = []
     attacking_player, attacked_player = game.player_1, game.player_2
 
     while not game.has_ended:
         with suppress(CannotBombPosition):
             position = get_random_position(attacked_player.board.length, attacked_player.board.width)
             bomb_outcome = bomb_position(attacked_player.board, position)
+            turns.append({[str(attacking_player)]: bomb_outcome})
             print_outcome(attacking_player, bomb_outcome, position)
             attacking_player, attacked_player = attacked_player, attacking_player
 
     print(f"Battle result: {attacked_player.name} won!")
     print(f"Remaining ships: {attacked_player.remaining_ships}", end="\n\n")
+
+    return turns
 
 
 def show_final_boards(game: Game):

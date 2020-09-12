@@ -9,8 +9,10 @@ pytest = "*"
 mypy = "*"
 pytest-cov = "*"
 tox = "*"
+requests = "*"
 
 [packages]
+fastapi = "*"
 
 [requires]
 python_version = "3.8"
