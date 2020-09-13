@@ -17,6 +17,7 @@ from naval_warfare.exceptions import CannotBombPosition
 from naval_warfare.exceptions import CannotOccupyPositions
 from naval_warfare.exceptions import InputWithError
 from naval_warfare.exceptions import UnavailableShip
+from naval_warfare.exceptions import UnknownPlayer
 from naval_warfare.helpers import convert_boolean_to_yes_no
 from naval_warfare.models import Board2D
 from naval_warfare.models import Position
@@ -56,6 +57,15 @@ class Game:
     @property
     def players(self) -> List[Player]:
         return [self.player_1, self.player_2]
+
+    def get_player(self, player_name: str) -> Player:
+        if player_name == self.player_1.name:
+            return self.player_1
+
+        if player_name == self.player_2.name:
+            return self.player_2
+
+        raise UnknownPlayer
 
 
 DEFAULT_GAME_OPTION: GameOption = {
