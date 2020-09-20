@@ -13,7 +13,7 @@ class PositionStatus(Enum):
     BOMBED = "B"
 
 
-class ShipDirection(Enum):
+class ShipDirection(str, Enum):
     H = "horizontally"
     V = "vertically"
 
