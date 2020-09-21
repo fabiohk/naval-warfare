@@ -1,7 +1,11 @@
 import logging
+from collections import namedtuple
 from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
+from dataclasses import field
+from enum import Enum
+from enum import auto
 from random import randint
 from typing import Dict
 from typing import List
@@ -29,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 AvailableShip = TypedDict("AvailableShip", {"kind": str, "length": int, "quantity": int})
 GameOption = Dict[str, AvailableShip]
+Turn = namedtuple("Turn", ["attacking_player", "outcome", "position"])
 
 
 class Player:
@@ -45,14 +50,22 @@ class Player:
         return [ship.kind for ship in self.board.ships if not is_ship_destroyed(ship)]
 
 
+class GameStatus(Enum):
+    INITIALIZED = auto()
+    STARTED = auto()
+    ENDED = auto()
+
+
 @dataclass
 class Game:
     player_1: Player
     player_2: Player
+    status: GameStatus = field(default=GameStatus.INITIALIZED, init=False)
+    turns: List[Turn] = field(default_factory=list, init=False)
 
     @property
     def has_ended(self) -> bool:
-        return any(has_all_ships_destroyed(player.board) for player in self.players)
+        return self.status == GameStatus.ENDED or any(has_all_ships_destroyed(player.board) for player in self.players)
 
     @property
     def players(self) -> List[Player]:
@@ -66,6 +79,17 @@ class Game:
             return self.player_2
 
         raise UnknownPlayer
+
+    def add_turn(self, attacking_player: Player, outcome: BombOutcome, position: Position):
+        self.turns.append(Turn(attacking_player, outcome, position))
+
+    @property
+    def winner(self) -> Optional[Player]:
+        if self.has_ended and has_all_ships_destroyed(self.player_1.board):
+            return self.player_2
+        if self.has_ended and has_all_ships_destroyed(self.player_2.board):
+            return self.player_1
+        return None
 
 
 DEFAULT_GAME_OPTION: GameOption = {
@@ -163,14 +187,14 @@ def get_random_position(length: int, width: int) -> Position:
     return Position(randint(0, length), randint(0, width))
 
 
-def print_outcome(player: Player, outcome: BombOutcome, position: Position):
+def print_outcome(player_name: str, outcome: BombOutcome, position: Position):
     hit_something, destroyed_ship = (
         convert_boolean_to_yes_no(outcome.has_hit_something),
         convert_boolean_to_yes_no(outcome.has_destroyed_a_ship),
     )
     print(
         f"""
-        {player.name} attacked position ({position.x}, {position.y})...
+        {player_name} attacked position ({position.x}, {position.y})...
         Outcome:
             - hit something: {hit_something}
             - destroyed ship: {destroyed_ship}
@@ -179,22 +203,18 @@ def print_outcome(player: Player, outcome: BombOutcome, position: Position):
 
 
 def start(game: Game) -> List[Dict[str, BombOutcome]]:
-    print("Time to battle!")
-    turns = []
+    game.status = GameStatus.STARTED
     attacking_player, attacked_player = game.player_1, game.player_2
 
     while not game.has_ended:
         with suppress(CannotBombPosition):
             position = get_random_position(attacked_player.board.length, attacked_player.board.width)
             bomb_outcome = bomb_position(attacked_player.board, position)
-            turns.append({[str(attacking_player)]: bomb_outcome})
-            print_outcome(attacking_player, bomb_outcome, position)
+            game.add_turn(attacking_player, bomb_outcome, position)
             attacking_player, attacked_player = attacked_player, attacking_player
 
-    print(f"Battle result: {attacked_player.name} won!")
-    print(f"Remaining ships: {attacked_player.remaining_ships}", end="\n\n")
-
-    return turns
+    game.status = GameStatus.ENDED
+    return game.turns
 
 
 def show_final_boards(game: Game):

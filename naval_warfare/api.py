@@ -2,17 +2,21 @@ import logging
 from typing import Dict
 from typing import List
 
+from fastapi import BackgroundTasks
+from fastapi import Body
 from fastapi import FastAPI
 from fastapi import Query
 
 from naval_warfare.actions import place_ship_on_board
 from naval_warfare.api_models import Players
 from naval_warfare.api_models import ShipOnBoard
+from naval_warfare.exceptions import GameAlreadyStarted
 from naval_warfare.exceptions import UnknownGame
 from naval_warfare.exceptions import UnknownPlayer
 from naval_warfare.exceptions import UnknownShip
 from naval_warfare.game import DEFAULT_GAME_OPTION
 from naval_warfare.game import Game
+from naval_warfare.game import GameStatus
 from naval_warfare.game import Player
 from naval_warfare.game import retrieve_available_ships
 from naval_warfare.game import start
@@ -27,7 +31,7 @@ games_count = 0
 
 
 @app.post("/new-game/", status_code=201)
-def start_game(players: Players) -> Dict[str, int]:
+def start_new_game(players: Players) -> Dict[str, int]:
     logger.info("Starting a new game!")
 
     global games_count
@@ -99,8 +103,20 @@ def put_ship_on_board(ship_on_board: ShipOnBoard):
 
 
 @app.post("/play-game/")
-def play_game():
-    pass
+def play_game(
+    background_tasks: BackgroundTasks,
+    game_id: int = Body(..., alias="game", description="The game ID to start the game", title="Game ID", embed=True),
+):
+    logger.info("Receive a request to start the game %s", game_id)
+    game: Game = getattr(app, f"game_{game_id}", None)
+    if not game:
+        raise UnknownGame
+
+    if game.status != GameStatus.INITIALIZED:
+        raise GameAlreadyStarted
+
+    background_tasks.add_task(start, game)
+    return {"detail": f"Started game {game_id}!"}
 
 
 @app.get("/game-result/")

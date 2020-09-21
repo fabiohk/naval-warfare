@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from naval_warfare import api
 from naval_warfare.game import DEFAULT_GAME_OPTION
 from naval_warfare.game import Game
+from naval_warfare.game import GameStatus
 from naval_warfare.game import Player
 from naval_warfare.models import BoardPosition
 from naval_warfare.models import Position
@@ -161,3 +162,39 @@ def test_shouldnt_place_a_ship_on_an_already_occupied_position(
     assert ship_quantity_after_call == ship_quantity_before_call
     assert response.status_code == 400
     assert response.json() == {"detail": "Cannot occupy ship on given position!"}
+
+
+def test_should_successfully_start_the_game(app_client: TestClient, game: Dict[str, Union[int, Player]]):
+    game_id = game["id"]
+
+    response = app_client.post("/play-game/", json={"game": game_id})
+
+    assert response.status_code == 200
+    assert response.json() == {"detail": f"Started game {game_id}!"}
+
+    game: Game = getattr(api.app, f"game_{game_id}")
+
+    assert game.status != GameStatus.INITIALIZED
+
+
+def test_shouldnt_start_an_unknown_game(app_client: TestClient):
+    response = app_client.post("/play-game/", json={"game": 42})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Unknown game!"}
+
+
+@pytest.mark.parametrize("status", [GameStatus.STARTED, GameStatus.ENDED])
+def test_shouldnt_start_a_game_that_has_already_started(
+    app_client: TestClient, game: Dict[str, Union[int, Player]], status: GameStatus
+):
+    game_id = game["id"]
+
+    game: Game = getattr(api.app, f"game_{game_id}")
+    game.status = status
+
+    response = app_client.post("/play-game/", json={"game": game_id})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Game already started!"}
+    assert game.status == status

@@ -59,3 +59,13 @@ class UnknownShip(HTTPException):
         headers: Optional[Dict[str, Any]] = None,
     ) -> None:
         super().__init__(status_code=status_code, detail=detail, headers=headers)
+
+
+class GameAlreadyStarted(HTTPException):
+    def __init__(
+        self,
+        status_code: int = 400,
+        detail: Any = "Game already started!",
+        headers: Optional[Dict[str, Any]] = None,
+    ):
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
