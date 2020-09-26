@@ -202,7 +202,7 @@ def print_outcome(player_name: str, outcome: BombOutcome, position: Position):
     )
 
 
-def start(game: Game) -> List[Dict[str, BombOutcome]]:
+def start(game: Game) -> List[Turn]:
     game.status = GameStatus.STARTED
     attacking_player, attacked_player = game.player_1, game.player_2
 

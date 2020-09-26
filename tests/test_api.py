@@ -5,14 +5,19 @@ import pytest
 from fastapi.testclient import TestClient
 
 from naval_warfare import api
+from naval_warfare.actions import BombOutcome
+from naval_warfare.actions import bomb_position
+from naval_warfare.actions import place_ship_on_board
 from naval_warfare.game import DEFAULT_GAME_OPTION
 from naval_warfare.game import Game
 from naval_warfare.game import GameStatus
 from naval_warfare.game import Player
+from naval_warfare.game import Turn
 from naval_warfare.models import BoardPosition
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
 from naval_warfare.models import Ship
+from naval_warfare.models import ShipDirection
 
 
 @pytest.fixture
@@ -198,3 +203,65 @@ def test_shouldnt_start_a_game_that_has_already_started(
     assert response.status_code == 400
     assert response.json() == {"detail": "Game already started!"}
     assert game.status == status
+
+
+def test_should_succesfully_retrieve_a_game_result_that_ended(
+    app_client: TestClient, game: Dict[str, Union[int, Player]]
+):
+    game_id = game["id"]
+
+    game: Game = getattr(api.app, f"game_{game_id}")
+    game.status = GameStatus.ENDED
+
+    player_1, player_2 = game.players
+
+    place_ship_on_board(Ship(kind="AIR", length=1), player_1.board, Position(0, 0), ShipDirection.H)
+    place_ship_on_board(Ship(kind="AIR", length=1), player_2.board, Position(0, 0), ShipDirection.H)
+    outcome = bomb_position(player_2.board, Position(0, 0))
+    game.add_turn(player_1, outcome, Position(0, 0))
+
+    response = app_client.get("/game-result/", params={"game": game_id})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "winner": player_1.name,
+        "turns": [
+            {
+                "attacking_player": player_1.name,
+                "outcome": {"has_hit_something": True, "has_destroyed_a_ship": True},
+                "position": {"x": 0, "y": 0},
+            }
+        ],
+    }
+
+
+def test_shouldnt_retrieve_the_game_result_when_it_hasnt_started(
+    app_client: TestClient, game: Dict[str, Union[int, Player]]
+):
+    game_id = game["id"]
+
+    response = app_client.get("/game-result/", params={"game": game_id})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Game hasn't started yet!"}
+
+
+def test_shouldnt_retrieve_the_game_result_when_it_is_still_in_progress(
+    app_client: TestClient, game: Dict[str, Union[int, Player]]
+):
+    game_id = game["id"]
+
+    game: Game = getattr(api.app, f"game_{game_id}")
+    game.status = GameStatus.STARTED
+
+    response = app_client.get("/game-result/", params={"game": game_id})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Game still in progress!"}
+
+
+def test_shouldnt_retrieve_a_result_from_an_unknown_game(app_client: TestClient):
+    response = app_client.get("/game-result/", params={"game": 42})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Unknown game!"}

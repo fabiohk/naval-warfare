@@ -11,6 +11,8 @@ from naval_warfare.actions import place_ship_on_board
 from naval_warfare.api_models import Players
 from naval_warfare.api_models import ShipOnBoard
 from naval_warfare.exceptions import GameAlreadyStarted
+from naval_warfare.exceptions import GameHasntStarted
+from naval_warfare.exceptions import GameStillInProgress
 from naval_warfare.exceptions import UnknownGame
 from naval_warfare.exceptions import UnknownPlayer
 from naval_warfare.exceptions import UnknownShip
@@ -120,5 +122,28 @@ def play_game(
 
 
 @app.get("/game-result/")
-def get_game_result():
-    pass
+def retrieve_game_result(game_id: int = Query(..., alias="game", description="The player game ID", title="Game ID")):
+    logger.info("Retrieving game result from %s", game_id)
+    game: Game = getattr(app, f"game_{game_id}", None)
+    if not game:
+        raise UnknownGame
+
+    if game.status != GameStatus.ENDED:
+        logger.debug("Game status: %s", game.status)
+        exception = GameHasntStarted if game.status == GameStatus.INITIALIZED else GameStillInProgress
+        raise exception
+
+    return {
+        "winner": str(game.winner),
+        "turns": [
+            {
+                "attacking_player": str(turn.attacking_player),
+                "outcome": {
+                    "has_hit_something": turn.outcome.has_hit_something,
+                    "has_destroyed_a_ship": turn.outcome.has_destroyed_a_ship,
+                },
+                "position": {"x": turn.position.x, "y": turn.position.y},
+            }
+            for turn in game.turns
+        ],
+    }

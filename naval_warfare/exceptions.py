@@ -69,3 +69,17 @@ class GameAlreadyStarted(HTTPException):
         headers: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(status_code=status_code, detail=detail, headers=headers)
+
+
+class GameStillInProgress(HTTPException):
+    def __init__(
+        self, status_code: int = 400, detail: Any = "Game still in progress!", headers: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
+
+
+class GameHasntStarted(HTTPException):
+    def __init__(
+        self, status_code: int = 400, detail: Any = "Game hasn't started yet!", headers: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
