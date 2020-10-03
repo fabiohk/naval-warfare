@@ -13,7 +13,7 @@ There's a game already setup that you can find [here](games/game_1.in), so if yo
 - If you have `docker-compose`:
 
 ```bash
-docker-compose run play-game python main.py < games/game_1.in
+docker-compose run play-game < games/game_1.in
 ```
 
 - If you don't have Docker, be sure that you have at least Python 3.8:

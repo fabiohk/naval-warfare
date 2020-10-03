@@ -10,9 +10,12 @@ mypy = "*"
 pytest-cov = "*"
 tox = "*"
 requests = "*"
+sqlalchemy-stubs = "*"
 
 [packages]
 fastapi = "*"
+sqlalchemy = "*"
+databases = {extras = ["sqlite"], version = "*"}
 
 [requires]
 python_version = "3.8"

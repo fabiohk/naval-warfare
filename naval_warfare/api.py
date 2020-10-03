@@ -2,6 +2,8 @@ import logging
 from typing import Dict
 from typing import List
 
+import databases
+import sqlalchemy
 from fastapi import BackgroundTasks
 from fastapi import Body
 from fastapi import FastAPI
@@ -25,19 +27,43 @@ from naval_warfare.game import start
 from naval_warfare.models import Position
 from naval_warfare.models import Ship
 
+DATABASE_URL = "sqlite:///./test.db"
+
+database = databases.Database(DATABASE_URL)
+metadata = sqlalchemy.MetaData()
+
+games = sqlalchemy.Table(
+    "games", metadata, sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True), sqlite_autoincrement=True
+)
+
+
+engine = sqlalchemy.create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+metadata.create_all(engine)
+
+
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-games_count = 0
+
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
 
 
 @app.post("/new-game/", status_code=201)
-def start_new_game(players: Players) -> Dict[str, int]:
+async def start_new_game(players: Players) -> Dict[str, int]:
     logger.info("Starting a new game!")
 
-    global games_count
-    games_count += 1
+    query = games.insert().values()
+    logger.debug("Insert query: %s", query)
+    games_count = await database.execute(query)
+
     player_1, player_2 = Player(players.player_1, game_option=DEFAULT_GAME_OPTION), Player(
         players.player_2, game_option=DEFAULT_GAME_OPTION
     )
