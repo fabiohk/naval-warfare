@@ -14,7 +14,7 @@ The current implemented game have the following available ships:
 
 ## File [game_1.in](game_1.in) 
 
-Initial boards (where `O` means the position is free and `X` occupied:
+Initial boards (where `O` means the position is free and `X` occupied):
 
 -- Player 1
 

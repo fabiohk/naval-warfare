@@ -32,8 +32,8 @@ DATABASE_URL = "sqlite:///./test.db"
 database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
 
-games = sqlalchemy.Table(
-    "games", metadata, sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True), sqlite_autoincrement=True
+game = sqlalchemy.Table(
+    "game", metadata, sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True), sqlite_autoincrement=True
 )
 
 
@@ -60,7 +60,7 @@ async def shutdown():
 async def start_new_game(players: Players) -> Dict[str, int]:
     logger.info("Starting a new game!")
 
-    query = games.insert().values()
+    query = game.insert().values()
     logger.debug("Insert query: %s", query)
     games_count = await database.execute(query)
 
