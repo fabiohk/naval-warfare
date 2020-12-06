@@ -6,6 +6,7 @@ from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
@@ -29,11 +30,25 @@ class Game(StandardMixin):
     settings_id = Column("settings_id", Integer, ForeignKey("game_settings.id"))
     settings = relationship("GameSettings", back_populates="games")
 
+    players = relationship("Player", secondary="matches")
+
 
 class Player(StandardMixin):
     __tablename__ = "players"
 
     name = Column("name", String(255), unique=True, index=True)
+
+    games = relationship("Game", secondary="matches")
+
+
+class GameMatch(StandardMixin):
+    __tablename__ = "game_match"
+
+    game_id = Column("game_id", Integer, ForeignKey("games.id"))
+    player_id = Column("player_id", Integer, ForeignKey("players.id"))
+
+    game = relationship(Game, backref=backref("matches"))
+    player = relationship(Player, backref=backref("matches"))
 
 
 class Ship(StandardMixin):
