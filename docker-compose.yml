@@ -9,10 +9,17 @@ services:
     command: >
       sh -c "pip install tox && tox"
 
+  db:
+    image: postgres:13
+    ports:
+      - 5432:5432
+
   play-game:
     build:
       context: .
     # environment: # Uncomment if you want to see logs from DEBUG level
       # LOG_LEVEL: "DEBUG" # Uncomment if you want to see logs from DEBUG level
+    depends_on:
+      - db
     command: >
       python main.py
