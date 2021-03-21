@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   tests:
-    image: python:3.8-slim
+    image: python:3.9-slim
     working_dir: /app
     volumes:
       - .:/app
@@ -11,6 +9,8 @@ services:
 
   db:
     image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=postgres
     ports:
       - 5432:5432
 

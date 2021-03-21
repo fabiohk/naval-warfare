@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = {extras = ["d"], version = "==20.8b1"}
+black = {extras = ["d"],version = "==20.8b1"}
 pytest = "*"
 mypy = "*"
 pytest-cov = "*"
@@ -15,7 +15,9 @@ sqlalchemy-stubs = "*"
 [packages]
 fastapi = "*"
 sqlalchemy = "*"
-databases = {extras = ["sqlite"], version = "*"}
+databases = {extras = ["postgresql"],version = "*"}
+alembic = "*"
+psycopg2-binary = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
