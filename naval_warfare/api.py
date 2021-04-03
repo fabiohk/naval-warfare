@@ -2,75 +2,59 @@ import logging
 from typing import Dict
 from typing import List
 
-import databases
 import sqlalchemy
 from fastapi import BackgroundTasks
 from fastapi import Body
 from fastapi import FastAPI
 from fastapi import Query
+from sqlalchemy.future import select
 
 from naval_warfare.actions import place_ship_on_board
 from naval_warfare.api_models import Players
 from naval_warfare.api_models import ShipOnBoard
+from naval_warfare.db_models import Board
+from naval_warfare.db_models import Game
+from naval_warfare.db_models import GameSettings
+from naval_warfare.db_models import Player
+from naval_warfare.db_models import SessionLocal
 from naval_warfare.exceptions import GameAlreadyStarted
 from naval_warfare.exceptions import GameHasntStarted
 from naval_warfare.exceptions import GameStillInProgress
 from naval_warfare.exceptions import UnknownGame
-from naval_warfare.exceptions import UnknownPlayer
 from naval_warfare.exceptions import UnknownShip
 from naval_warfare.game import DEFAULT_GAME_OPTION
-from naval_warfare.game import Game
 from naval_warfare.game import GameStatus
-from naval_warfare.game import Player
 from naval_warfare.game import retrieve_available_ships
 from naval_warfare.game import start
 from naval_warfare.models import Position
 from naval_warfare.models import Ship
-
-DATABASE_URL = "sqlite:///./test.db"
-
-database = databases.Database(DATABASE_URL)
-metadata = sqlalchemy.MetaData()
-
-game = sqlalchemy.Table(
-    "game", metadata, sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True), sqlite_autoincrement=True
-)
-
-
-engine = sqlalchemy.create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-metadata.create_all(engine)
-
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
-
-
 @app.post("/new-game/", status_code=201)
 async def start_new_game(players: Players) -> Dict[str, int]:
     logger.info("Starting a new game!")
 
-    query = game.insert().values()
-    logger.debug("Insert query: %s", query)
-    games_count = await database.execute(query)
+    player_1, player_2 = (Player(name=players.player_1), Player(name=players.player_2))
 
-    player_1, player_2 = Player(players.player_1, game_option=DEFAULT_GAME_OPTION), Player(
-        players.player_2, game_option=DEFAULT_GAME_OPTION
-    )
-    setattr(app, f"game_{games_count}", Game(player_1, player_2))
+    async with SessionLocal() as session:
+        result = await session.execute(select(GameSettings).filter(GameSettings.slug == "default"))
+        game_settings = result.first()
+        if game_settings is None:
+            game_settings = GameSettings(slug="default", configuration=DEFAULT_GAME_OPTION)
+            session.add(game_settings)
+        game = Game(settings=game_settings)
+        player_1_board, player_2_board = Board(length=10, width=10, game=game, player=player_1), Board(
+            length=10, width=10, game=game, player=player_2
+        )
+        session.add_all([player_1, player_2, game, player_1_board, player_2_board])
+        await session.commit()
+        await session.refresh(game)
 
-    logger.info("Game %s started!", games_count)
-    return {"id": games_count}
+    return {"id": game.id}
 
 
 @app.get("/available-ships/")

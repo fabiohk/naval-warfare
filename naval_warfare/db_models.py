@@ -6,13 +6,12 @@ from sqlalchemy import String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
-engine = create_async_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 Base = declarative_base()
@@ -26,9 +25,9 @@ class Game(StandardMixin, Base):
     __tablename__ = "games"
 
     settings_id = Column("settings_id", Integer, ForeignKey("game_settings.id"))
-    settings = relationship("GameSettings", back_populates="games")
 
-    players = relationship("Player", secondary="boards")
+    settings = relationship("GameSettings", back_populates="games")
+    boards = relationship("Board", back_populates="game")
 
 
 class Player(StandardMixin, Base):
@@ -36,7 +35,7 @@ class Player(StandardMixin, Base):
 
     name = Column("name", String(255), unique=True, index=True)
 
-    games = relationship("Game", secondary="boards")
+    boards = relationship("Board", back_populates="player")
 
 
 class Board(StandardMixin, Base):
@@ -48,8 +47,8 @@ class Board(StandardMixin, Base):
     game_id = Column("game_id", Integer, ForeignKey("games.id"))
     player_id = Column("player_id", Integer, ForeignKey("players.id"))
 
-    game = relationship(Game, backref=backref("boards"))
-    player = relationship(Player, backref=backref("boards"))
+    game = relationship(Game, back_populates="boards")
+    player = relationship(Player, back_populates="boards")
 
 
 class ShipPosition(StandardMixin, Base):
@@ -71,4 +70,5 @@ class GameSettings(StandardMixin, Base):
 
     slug = Column("slug", String(255), unique=True)
     configuration = Column("configuration", JSON)
+
     games = relationship("Game", back_populates="settings")

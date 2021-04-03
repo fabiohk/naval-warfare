@@ -1,3 +1,4 @@
+import uuid
 from typing import Dict
 from typing import Union
 
@@ -5,14 +6,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from naval_warfare import api
-from naval_warfare.actions import BombOutcome
 from naval_warfare.actions import bomb_position
 from naval_warfare.actions import place_ship_on_board
 from naval_warfare.game import DEFAULT_GAME_OPTION
 from naval_warfare.game import Game
 from naval_warfare.game import GameStatus
 from naval_warfare.game import Player
-from naval_warfare.game import Turn
 from naval_warfare.models import BoardPosition
 from naval_warfare.models import Position
 from naval_warfare.models import PositionStatus
@@ -28,20 +27,20 @@ def app_client() -> TestClient:
 @pytest.fixture
 def game() -> Dict[str, Union[int, Player]]:
     game_id = 1
-    player_1, player_2 = Player("Player 1", game_option=DEFAULT_GAME_OPTION), Player(
-        "Player 2", game_option=DEFAULT_GAME_OPTION
+    player_1, player_2 = (
+        Player("Player 1", game_option=DEFAULT_GAME_OPTION),
+        Player("Player 2", game_option=DEFAULT_GAME_OPTION),
     )
     setattr(api.app, f"game_{game_id}", Game(player_1, player_2))
     return {"id": game_id, "player_1": player_1, "player_2": player_2}
 
 
 def test_should_succesfully_create_a_new_game(app_client: TestClient):
-    response = app_client.post("/new-game/", json={"player_1": "Player 1", "player_2": "Player 2"})
+    response = app_client.post(
+        "/new-game/", json={"player_1": f"Player 1-{uuid.uuid4()}", "player_2": f"Player 2-{uuid.uuid4()}"}
+    )
 
     assert response.status_code == 201
-    assert response.json() == {"id": 1}
-
-    assert hasattr(api.app, "game_1")
 
 
 def test_should_successfully_retrieve_the_available_ships_from_a_player(
@@ -96,13 +95,10 @@ def test_should_successfully_place_ship_on_board(app_client: TestClient, game: D
         "direction": "horizontally",
     }
 
-    expected_positions, expected_ship = [
-        Position(0, 0),
-        Position(0, 1),
-        Position(0, 2),
-        Position(0, 3),
-        Position(0, 4),
-    ], Ship("aircraft-carrier", 5)
+    expected_positions, expected_ship = (
+        [Position(0, 0), Position(0, 1), Position(0, 2), Position(0, 3), Position(0, 4)],
+        Ship("aircraft-carrier", 5),
+    )
 
     ship_quantity_before_call = game["player_1"].game_option["AIR"]["quantity"]
 
