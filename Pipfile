@@ -15,9 +15,9 @@ sqlalchemy-stubs = "*"
 [packages]
 fastapi = "*"
 sqlalchemy = "*"
-databases = {extras = ["postgresql"],version = "*"}
 alembic = "*"
 psycopg2-binary = "*"
+asyncpg = "*"
 
 [requires]
 python_version = "3.9"

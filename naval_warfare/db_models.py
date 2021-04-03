@@ -1,20 +1,19 @@
-import databases
+from sqlalchemy import JSON
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
+DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
-database = databases.Database(DATABASE_URL)
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 Base = declarative_base()
 
@@ -70,4 +69,6 @@ class Ship(StandardMixin, Base):
 class GameSettings(StandardMixin, Base):
     __tablename__ = "game_settings"
 
+    slug = Column("slug", String(255), unique=True)
+    configuration = Column("configuration", JSON)
     games = relationship("Game", back_populates="settings")
